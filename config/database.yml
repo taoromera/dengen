@@ -1,0 +1,26 @@
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: dengen
+  pool: 5
+  wait_timeout: 10
+  username: postgres
+  reconnect: true
+
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: dengen
+  pool: 5
+  username: postgres
+  reconnect: true
+
+#need that stuff to make the test db
+test:
+  adapter: postgresql
+  encoding: unicode
+  database: dengen
+  pool: 5
+  username: postgres
+  reconnect: true
+

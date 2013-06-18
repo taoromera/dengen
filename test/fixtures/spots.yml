@@ -1,0 +1,29 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  name: MyText
+  address: MyText
+  tel: MyText
+  wireless: MyText
+  category: MyText
+  location: MyString
+  website: MyText
+  tags: MyText
+  other: MyText
+  goods: 1
+  bads: 1
+  eigyo_jikan: MyText
+
+two:
+  name: MyText
+  address: MyText
+  tel: MyText
+  wireless: MyText
+  category: MyText
+  location: MyString
+  website: MyText
+  tags: MyText
+  other: MyText
+  goods: 1
+  bads: 1
+  eigyo_jikan: MyText
