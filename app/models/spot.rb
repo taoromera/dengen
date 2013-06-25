@@ -19,7 +19,7 @@ class Spot < ActiveRecord::Base
       # Store spots in local DB
       cache_spots(spots, search_box)
 
-      # Clean response to return only useful fields AND add comments
+      # Clean response to return only useful fields, goods & bads
       res = clean_response(res)
 
       # Add proprietary spots to the reponse
@@ -37,9 +37,11 @@ class Spot < ActiveRecord::Base
       spot.except!("entry_id", "wireless", "powersupply", "other", "tag", "url_title", "status", "edit_date", "category", "mo_url", "icon", "icon_powerframe", "title", "url_pc")
       spot_id = find_spot_id_from_lonlat(spot["longitude"], spot["latitude"])
       spot["id"] = spot_id
+      spot["goods"] = Spot.find(spot_id).goods
+      spot["bads"] = Spot.find(spot_id).bads
 
       # Add comments for this spot
-      spot["comments"] = Spot.find(spot_id).comments
+#      spot["comments"] = Spot.find(spot_id).comments
     end
 
   end
@@ -51,7 +53,7 @@ class Spot < ActiveRecord::Base
   def add_own_spots(res, search_box)
     
     # Retrieve spots from the DB in the searched area
-    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own=true").values
+    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id, address, tel FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own=true").values
 
     # Add proprietary spots to the results hash
     db_spots.each do |db_spot|
@@ -63,10 +65,12 @@ class Spot < ActiveRecord::Base
                 "longitude" => db_spot[5],
                 "latitude" => db_spot[6],
                 "id" => db_spot[7],
-                "comments" => Spot.find(db_spot[7]).comments}]
+                "address" => db_spot[8],
+                "tel" => db_spot[9]}]
+      #          "comments" => Spot.find(db_spot[7]).comments}]
     end
-   
-    return res
+
+    return res.flatten
   end
 
   def cache_spots(spots, search_box)
@@ -115,6 +119,33 @@ class Spot < ActiveRecord::Base
     Spot.find(params[:id]).comments.create(:content => params[:content]) 
   end
 
+  def add_new_spot(params)
+    # (null) parameters are actually empty strings
+    params.keys.each do |k| 
+      params[k] == '(null)' ? params[k] = '-' : 1
+    end
+
+    new_spot = Spot.create(:address => '',
+                :active => '1',
+                :bads => 0,
+                :category => '',
+                :eigyo_jikan => params[:eigyo_jikan],
+                :goods => 0,
+                :name => params[:name],
+                :other => '',
+                :own => '1',
+                :tags => '',
+                :tel => params[:tel],
+                :website => params[:website],
+                :wireless => '')
+    # Enter the location as a GIS object
+    Spot.connection.execute("UPDATE spots SET location = ST_GeometryFromText('POINT(#{params[:lon].to_f.round(12).to_s} #{params[:lat].to_f.round(12).to_s})', 4326) WHERE id=#{new_spot.id}")
+
+#    NewSpot.send_new_spot_notif(new_spot).deliver
+
+    return {:status => 'ok'}
+  end
+
   def up_goodbad(params)
  
     params[:good] == "0" ? params[:good] = false : params[:good] = true
@@ -126,7 +157,7 @@ class Spot < ActiveRecord::Base
     if gb.empty? 
       gb.create(:token => params[:token], :good => params[:good])
       params[:good] == true ? spot.increment!(:goods) : spot.increment!(:bads)
-      return
+      return {:goods => params[:good] ? 1 : 0, :bads => params[:good] ? 0 : 1, :status => 'ok'}
     end 
 
     # Has this user already reviewed this spot?
@@ -135,9 +166,7 @@ class Spot < ActiveRecord::Base
     if double_review.empty?
       gb.create(:token => params[:token], :good => params[:good]) 
       params[:good] == true ? spot.increment!(:goods) : spot.increment!(:bads)
-      return "Created entry"
     elsif double_review[0].good == params[:good]
-      return "Double review"
     else
       double_review[0].update_attributes(:good => params[:good])
       if params[:good] == false
@@ -147,8 +176,9 @@ class Spot < ActiveRecord::Base
         spot.decrement!(:bads)
         spot.increment!(:goods)
       end
-      return "Changed to #{double_review[0].good}"
     end
+ 
+    return {:goods => spot.goods, :bads => spot.bads, :status => 'ok'}
   end
 
 

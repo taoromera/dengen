@@ -18,4 +18,10 @@ class SpotsController < ApplicationController
     res = spot.up_goodbad(params)
     render :json => ActiveSupport::JSON.encode(res)
   end
+
+  def add_new_spot
+    spot = Spot.new
+    res = spot.add_new_spot(params)
+    render :json => ActiveSupport::JSON.encode(res)
+  end
 end

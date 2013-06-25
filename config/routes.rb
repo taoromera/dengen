@@ -3,6 +3,7 @@ Dengen::Application.routes.draw do
   match 'get_spots' => 'Spots#get_spots'
   match 'up_comment' => 'Spots#up_comment'
   match 'up_goodbad' => 'Spots#up_goodbad'
+  match 'add_new_spot' => 'Spots#add_new_spot'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
