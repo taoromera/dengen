@@ -31,19 +31,21 @@ class Spot < ActiveRecord::Base
   def clean_response(res)
 
     res["results"].each do |spot|
-      spot["eigyo_jikan"] = find_eigyo_jikan(spot["other"])
+#      spot["eigyo_jikan"] = find_eigyo_jikan(spot["other"])
       spot["name"] = spot["title"]
       spot["website"] = spot["url_pc"]
-      spot.except!("entry_id", "wireless", "powersupply", "other", "tag", "url_title", "status", "edit_date", "category", "mo_url", "icon", "icon_powerframe", "title", "url_pc")
+      spot.except!("eigyo_jikan", "entry_id", "wireless", "powersupply", "other", "tag", "url_title", "status", "edit_date", "mo_url", "icon", "icon_powerframe", "title", "url_pc")
       spot_id = find_spot_id_from_lonlat(spot["longitude"], spot["latitude"])
       spot["id"] = spot_id
       spot["goods"] = Spot.find(spot_id).goods
       spot["bads"] = Spot.find(spot_id).bads
+      spot["category"] = spot["category"][0]
 
       # Add comments for this spot
-#      spot["comments"] = Spot.find(spot_id).comments
+      spot["comments"] = Spot.find(spot_id).comments.collect{|x| x.content}
     end
 
+    return res["results"]
   end
 
   def find_spot_id_from_lonlat(lon, lat)
@@ -52,22 +54,25 @@ class Spot < ActiveRecord::Base
 
   def add_own_spots(res, search_box)
     
-    # Retrieve spots from the DB in the searched area
-    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id, address, tel FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own=true").values
+    # Retrieve spots from the DB in the searched area that are only owned by us
+    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id, address, tel, category FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own=true").values
 
     # Add proprietary spots to the results hash
     db_spots.each do |db_spot|
+
       res.push [{"name" => db_spot[0], 
                 "website" => db_spot[1], 
-                "eigyo_jikan" => db_spot[2], 
+#                "eigyo_jikan" => db_spot[2], 
                 "goods" => db_spot[3], 
                 "bads" => db_spot[4], 
                 "longitude" => db_spot[5],
                 "latitude" => db_spot[6],
                 "id" => db_spot[7],
                 "address" => db_spot[8],
-                "tel" => db_spot[9]}]
-      #          "comments" => Spot.find(db_spot[7]).comments}]
+                "tel" => db_spot[9],
+                "comments" => Spot.find(db_spot[7]).comments.collect{|x| x.content},
+                "category" => db_spot[10].nil? ? [] : db_spot[10]}]
+
     end
 
     return res.flatten
@@ -116,11 +121,16 @@ class Spot < ActiveRecord::Base
   end 
 
   def up_comment(params)
-    Spot.find(params[:id]).comments.create(:content => params[:content]) 
+    begin 
+      Spot.find(params[:id]).comments.create(:content => params[:content]) 
+      return {:status => 'ok'}
+    rescue
+      return {:status => 'error'}
+    end
   end
 
   def add_new_spot(params)
-    # (null) parameters are actually empty strings
+    # '(null)' parameters are actually empty strings
     params.keys.each do |k| 
       params[k] == '(null)' ? params[k] = '-' : 1
     end
@@ -138,10 +148,14 @@ class Spot < ActiveRecord::Base
                 :tel => params[:tel],
                 :website => params[:website],
                 :wireless => '')
+
     # Enter the location as a GIS object
     Spot.connection.execute("UPDATE spots SET location = ST_GeometryFromText('POINT(#{params[:lon].to_f.round(12).to_s} #{params[:lat].to_f.round(12).to_s})', 4326) WHERE id=#{new_spot.id}")
 
-#    NewSpot.send_new_spot_notif(new_spot).deliver
+    # Add comment
+    new_spot.comments.create(:content => params[:content]) 
+
+    NewSpot.send_new_spot_notif(new_spot).deliver
 
     return {:status => 'ok'}
   end
