@@ -1,9 +1,15 @@
 Dengen::Application.routes.draw do
 
+  devise_for :admin_users, ActiveAdmin::Devise.config
+  ActiveAdmin.routes(self)
+
   match 'get_spots' => 'Spots#get_spots'
   match 'up_comment' => 'Spots#up_comment'
   match 'up_goodbad' => 'Spots#up_goodbad'
   match 'add_new_spot' => 'Spots#add_new_spot'
+
+  # Necessary for Active Admin gem
+  root :to => "home#index"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

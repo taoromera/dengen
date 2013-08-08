@@ -1,7 +1,12 @@
 source 'https://rubygems.org'
 
 gem 'rails', '3.2.5'
-gem 'jquery-rails'
+gem 'jquery-rails', "2.3.0"
+
+# Admin interface
+gem 'activeadmin'
+gem 'sass-rails'
+gem "meta_search",    '>= 1.1.0.pre'
 
 #For debugging
 gem "pry", "~> 0.9.9.6", :require => "pry"
@@ -33,7 +38,6 @@ gem 'letter_opener'
 # in production environments by default.
 group :assets do
   # some trendy techs
-  gem 'sass-rails',   '~> 3.2.3'
   gem 'coffee-rails', '~> 3.2.1'
   gem 'uglifier', '>= 1.0.3'
 end

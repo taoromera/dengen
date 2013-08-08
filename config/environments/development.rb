@@ -46,4 +46,7 @@ Dengen::Application.configure do
     password: "sanpojp345"
   }
 
+  # Config necessary for Active Admin gem
+  config.action_mailer.default_url_options = { :host => 'localhost:3000' }
+
 end
