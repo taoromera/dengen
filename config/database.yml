@@ -1,5 +1,5 @@
 production:
-  adapter: postgresql
+  adapter: postgis
   encoding: unicode
   database: dengen
   pool: 5
@@ -8,7 +8,7 @@ production:
   reconnect: true
 
 development:
-  adapter: postgresql
+  adapter: postgis
   encoding: unicode
   database: dengen
   pool: 5
@@ -17,7 +17,7 @@ development:
 
 #need that stuff to make the test db
 test:
-  adapter: postgresql
+  adapter: postgis
   encoding: unicode
   database: dengen
   pool: 5

@@ -76,4 +76,7 @@ Dengen::Application.configure do
     password: "sanpojp345"
   }
 
+  # Config necessary for Active Admin gem
+  config.action_mailer.default_url_options = { :host => '180.235.230.73:3001' }
+  config.assets.precompile += %w[active_admin.css.scss active_admin.js active_admin/print.css spots.css.scss]
 end
