@@ -65,6 +65,13 @@ Dengen::Application.configure do
   # with SQLite, MySQL, and PostgreSQL)
   # config.active_record.auto_explain_threshold_in_seconds = 0.5
 
+  config.middleware.use ExceptionNotification::Rack,
+    email: {
+      email_prefix: '[BATTERY CAFE EXCEPTION]',
+      sender_address: 'sanpojp@gmail.com',
+      exception_recipients: 'taoromera@gmail.com'
+    }
+
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
     address: "smtp.gmail.com",

@@ -35,6 +35,13 @@ Dengen::Application.configure do
   # Expands the lines which load the assets
   config.assets.debug = true
 
+  config.middleware.use ExceptionNotification::Rack,
+    email: {
+      email_prefix: '[BATTERY CAFE EXCEPTION]',
+      sender_address: 'sanpojp@gmail.com',
+      exception_recipients: 'taoromera@gmail.com'
+    }
+
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
     address: "smtp.gmail.com",

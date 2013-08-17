@@ -33,7 +33,7 @@ gem "json"
 gem "typhoeus"
 
 #To get messages from exceptions in our server
-gem 'exception_notification'
+gem 'exception_notification', "~> 4.0.0"
 gem 'letter_opener'
 
 # Gems used only for assets and not required
