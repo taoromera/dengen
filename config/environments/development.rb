@@ -42,6 +42,9 @@ Dengen::Application.configure do
       exception_recipients: 'taoromera@gmail.com'
     }
 
+  # Config necessary for Active Admin gem
+  config.action_mailer.default_url_options = { :host => 'localhost:3001' }
+
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
     address: "smtp.gmail.com",
@@ -53,7 +56,5 @@ Dengen::Application.configure do
     password: "sanpojp345"
   }
 
-  # Config necessary for Active Admin gem
-  config.action_mailer.default_url_options = { :host => 'localhost:3001' }
 
 end
