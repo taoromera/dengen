@@ -40,10 +40,14 @@ class Spot < ActiveRecord::Base
       spot["goods"] = Spot.find(spot_id).goods
       spot["bads"] = Spot.find(spot_id).bads
       spot["category"] = spot["category"][0]
+      spot["active"] = Spot.find(spot_id).active
 
       # Add comments for this spot
       spot["comments"] = Spot.find(spot_id).comments.collect{|x| x.content}
     end
+    
+    # Reject spots that are not "active"
+    res["results"] = res["results"].reject { |h| h["active"] == false }
 
     return res["results"]
   end
@@ -55,7 +59,7 @@ class Spot < ActiveRecord::Base
   def add_own_spots(res, search_box)
     
     # Retrieve spots from the DB in the searched area that are only owned by us
-    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id, address, tel, category FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own=true").values
+    db_spots = Spot.connection.execute("SELECT name, website, eigyo_jikan, goods, bads, ST_X(location) as lon, ST_Y(location) as lat, id, address, tel, category FROM spots WHERE location && ST_MakeEnvelope(#{search_box[:w]},#{search_box[:s]},#{search_box[:e]},#{search_box[:n]}) AND own = true").values
 
     # Add proprietary spots to the results hash
     db_spots.each do |db_spot|
